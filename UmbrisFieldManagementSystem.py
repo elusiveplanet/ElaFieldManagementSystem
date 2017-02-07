@@ -14,8 +14,8 @@ from pygame.locals import *#
     # A2 :: B2 :: C2 :: D2
     # A3 :: B3 :: C3 :: D3
     # A4 :: B4 :: C4 :: D4
-# Use the gridVariables below to generate centered/alligned assets.
-# To center text, use the following call with the following definitons.
+# Use the gridVariables below to generate centered/aligned assets.
+# To center text, use the following call with the following definitions.
     # Let xLoc be the location of the xGrid
     # Let yLoc be the location of the yGrid
     # All others are defined already.
@@ -23,7 +23,7 @@ from pygame.locals import *#
 
 # Variables you might want to change.
 init = True
-sleepInterval = 1.0/10.0
+sleepInterval = 1.0/30.0
 dFontSize = 100
 
 # End of variables you might want to change.
@@ -35,10 +35,10 @@ pygame.init()
 pygame.camera.init()
 importantThings = pygame.display.Info()
 
-size = (importantThings.current_w, importantThings.current_w)
-screen = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+size = (importantThings.current_w, importantThings.current_h)
+screen = pygame.display.set_mode(size,0)
 dFont = pygame.font.SysFont("monospace", dFontSize)
-WHITE = (255,255,255)
+WHITE = (0,0,0)
 
 gridX = importantThings.current_w / 4
 gridY = importantThings.current_h / 3
@@ -106,19 +106,30 @@ while init:
     #This is the setup call for the game. Called once.
      cam_list = pygame.camera.list_cameras()
      print "Using camera %s ..." % cam_list[0]
-     webcam = pygame.camera.Camera(cam_list[0])
+     webcam = pygame.camera.Camera(cam_list[0], (640, 480))
      webcam.start()
      init = False
 
 while True:
     # This is the periodic call for the game. Called many times.
-
+    screen.fill(WHITE)
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit()
+        if event.type == QUIT:
+            sys.exit()
+        elif event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                webcam.stop()
+                pygame.quit()
+                sys.exit()
+    # test1 = pygame.Surface((importantThings.current_w, importantThings.current_h))
 
-    feed = webcam.get_image(screen)
-    feed = pygame.transform.scale(feed, (importantThings.current_w, importantThings.current_h))
-    screen.blit(feed, ((feed.get_width() + gridX), (feed.get_height() + gridY)))
+    # test1 = webcam.get_image(screen)
+    # test1 = pygame.transform.scale(test1, (importantThings.current_w, importantThings.current_h))
+    # screen.blit(test1, (importantThings.current_w - 640, importantThings.current_h - 480))
+
+    imagen = webcam.get_image()
+    imagen = pygame.transform.scale(imagen,(640,480))
+    screen.blit(imagen,(0,0))
 
     updateScore()
 
