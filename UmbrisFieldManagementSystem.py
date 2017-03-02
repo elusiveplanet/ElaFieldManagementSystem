@@ -4,7 +4,7 @@ import time
 import pygame
 import pygame.camera
 import pygame.image
-from pygame.locals import *#
+from pygame.locals import *
 
 # import RPi.GPIO as GPIO
 
@@ -128,8 +128,8 @@ while True:
     # screen.blit(test1, (importantThings.current_w - 640, importantThings.current_h - 480))
 
     imagen = webcam.get_image()
-    imagen = pygame.transform.scale(imagen,(640,480))
-    screen.blit(imagen,(0,0))
+    #imagen = pygame.transform.scale(imagen,(640,480))
+    #screen.blit(imagen,(0,0))
 
     updateScore()
 

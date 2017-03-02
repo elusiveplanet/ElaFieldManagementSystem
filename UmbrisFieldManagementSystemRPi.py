@@ -5,8 +5,10 @@ import pygame
 import pygame.camera
 import pygame.image
 from pygame.locals import *
-
+import pyfirmata
+from pyfirmata import Arduino, util
 import RPi.GPIO as GPIO
+from Adafruit_LED_Backpack import SevenSegment
 
 # GridWorld.init() == True
 # This is what the hypothetical grid layout looks like. Its a 3x4.
@@ -32,27 +34,33 @@ import RPi.GPIO as GPIO
 #   -el strips 2x out
 #   -button lights ~x out
 
+GPIO.cleanup()
+GPIO.setmode(GPIO.BCM)
+# GPIO.setup(centerStackRed, GPIO.OUT, initial=GPIO.LOW)
+
+board = Arduino('/dev/ttyUSB0')
+print('arduino setup!')
+
 # Variables you might want to change.
 init = True
 sleepInterval = 1.0/60.0
 dFontSize = 100
 
-centerStackRed = 2
-centerStackYellow = 3
-centerStackGreen = 4
-centerStackBuzzer = 14
-
-state = 1
+# Pin definitions for Arduino
+centerStackRed = board.get_pin('d:2:o')
+centerStackBuzzer = board.get_pin('d:3:o')
+centerStackYellow = board.get_pin('d:4:o')
+centerStackGreen = board.get_pin('d:5:o')
 
 # End of variables you might want to change.
 
-GPIO.cleanup()
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(centerStackRed, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(centerStackYellow, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(centerStackGreen, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(centerStackBuzzer, GPIO.OUT, initial=GPIO.LOW)
+# Create display instance on default I2C address (0x70) and bus number.
+display = SevenSegment.SevenSegment()
+display.begin()
+colon = True
+display.set_colon(colon)
 
+# Set up pyGame things + camera
 pygame.init()
 pygame.camera.init()
 importantThings = pygame.display.Info()
@@ -86,7 +94,6 @@ aurScoreImg = pygame.transform.scale(aurScoreImg, ((gridX, gridY)))
 leasathScore = 0
 aureliaScore = 0
 
-# Sourcetree whyyyyyyyyyyyyyyyyyyyyyyyyyyy
 
 def getMatchStartButton():
     return 0
@@ -113,29 +120,44 @@ def getAurNegButton():
  # Begin Center Stack Method Defs
 def special():
 	return 0
+	
 def red():
+	cleanCenterStack()
 	GPIO.output(centerStackRed, GPIO.HIGH)
+	
 def yellow():
+	cleanCenterStack()
 	GPIO.output(centerStackYellow, GPIO.HIGH)
+	
 def green():
+	cleanCenterStack()
 	GPIO.output(centerStackGreen, GPIO.HIGH)
+	
 def buzzerDef():
+	cleanCenterStack()
 	GPIO.output(centerStackBuzzer, GPIO.HIGH)
+    
 def redOsc():
+	cleanCenterStack()
 	GPIO.output(centerStackRed, GPIO.HIGH)
+	
 def yellowOsc():
+	cleanCenterStack()
 	GPIO.output(centerStackYellow, GPIO.HIGH)
+	
 def greenOsc():
+	cleanCenterStack()
 	GPIO.output(centerStackGreen, GPIO.HIGH)
+	
 def preGame():
 	yellowOsc()
-    green()
+	
 def lowTide():
 	yellowOsc()
-    green()
+	
 def gameOver():
 	red()
-    greenOsc()
+	
 def gameProg():
     green()
     
@@ -152,10 +174,10 @@ updateCenterStack = {0 : special,
 					10: gameOver,
                     11: gameProg,
 }
-	
+
 
 def updateScore():
-    # This outputs the scoreTextCentered and displays it.
+    # This outputs the scoreTextCentered from the global score vars and blits it.
     lesScoreText = dFont.render(str(leasathScore), 1, (0,0,0))
     lesTloc = (gridCentX + (gridX * 0) - (lesScoreText.get_width() / 2), gridCentY  + (gridY * 2) - (lesScoreText.get_height() / 2))
     aurScoreText = dFont.render(str(aureliaScore), 1, (0,0,0))
@@ -179,34 +201,40 @@ while True:
     # This is the periodic call for the game. Called many times.
     for event in pygame.event.get():
         if event.type == QUIT:
-			PIO.output(25, GPIO.LOW)
-			GPIO.output(23, GPIO.LOW)
-			GPIO.output(24, GPIO.LOW)
+			cleanCenterStack()
 			webcam.stop()
 			pygame.quit()
 			GPIO.cleanup()
 			sys.exit()
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
-				GPIO.output(25, GPIO.LOW)
-				GPIO.output(23, GPIO.LOW)
-				GPIO.output(24, GPIO.LOW)
+				# cleanCenterStack()
+				print('I set the GPIO pins back to low.')
+				print('Im ready to exit now.')
 				webcam.stop()
 				pygame.quit()
 				GPIO.cleanup()
 				sys.exit()
                 
-    screen.fill(WHITE)
-    imagen = webcam.get_image()
-    imagen = pygame.transform.scale(imagen,(importantThings.current_w,importantThings.current_h))
-    screen.blit(imagen,(0,0))
+	screen.fill(WHITE)
+	imagen = webcam.get_image()
+	imagen = pygame.transform.scale(imagen,(importantThings.current_w,importantThings.current_h))
+	screen.blit(imagen,(0,0))
 
-    updateCenterStack[state]()
+	# updateCenterStack[1]()
 
-    updateScore()
+	centerStackRed.write(1)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(0)
+	centerStackGreen.write(0)
 
-    leasathScore += 1
-    aureliaScore += 2
+	display.clear()
+	display.print_float(leasathScore, decimal_digits=0, justify_right=True)
+	display.write_display()
 
-    pygame.display.flip()
-    time.sleep(sleepInterval)
+	updateScore()
+	leasathScore += 1
+	aureliaScore += 2
+
+	pygame.display.flip()
+	time.sleep(sleepInterval)
