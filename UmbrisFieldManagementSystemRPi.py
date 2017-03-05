@@ -7,8 +7,12 @@ import pygame.image
 from pygame.locals import *
 import pyfirmata
 from pyfirmata import Arduino, util
+import wiringpi2 as wiringpi # http://raspi.tv/2013/how-to-use-wiringpi2-for-python-on-the-raspberry-pi-in-raspbian
 import RPi.GPIO as GPIO
 from Adafruit_LED_Backpack import SevenSegment
+
+# Woah, this is cool.
+# http://www.themountaingoats.net/wiki/doku.php?id=tabs:home
 
 # GridWorld.init() == True
 # This is what the hypothetical grid layout looks like. Its a 3x4.
@@ -41,9 +45,11 @@ GPIO.setmode(GPIO.BCM)
 board = Arduino('/dev/ttyUSB0')
 print('arduino setup!')
 
+########
+
 # Variables you might want to change.
 init = True
-sleepInterval = 1.0/60.0
+sleepInterval = 1.0/60.0 # Defined as 1/(Intended FPS)
 dFontSize = 100
 
 # Pin definitions for Arduino
@@ -53,6 +59,8 @@ centerStackYellow = board.get_pin('d:4:o')
 centerStackGreen = board.get_pin('d:5:o')
 
 # End of variables you might want to change.
+
+########
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = SevenSegment.SevenSegment()
@@ -64,6 +72,7 @@ display.set_colon(colon)
 pygame.init()
 pygame.camera.init()
 importantThings = pygame.display.Info()
+matchTime = 0
 
 size = (importantThings.current_w, importantThings.current_h)
 screen = pygame.display.set_mode(size,pygame.FULLSCREEN)
@@ -94,7 +103,7 @@ aurScoreImg = pygame.transform.scale(aurScoreImg, ((gridX, gridY)))
 leasathScore = 0
 aureliaScore = 0
 
-
+# Begin Input Method Defs
 def getMatchStartButton():
     return 0
 def getMatchResetSwitch():
@@ -119,48 +128,62 @@ def getAurNegButton():
     
  # Begin Center Stack Method Defs
 def special():
-	return 0
+	centerStackRed.write(0)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(0)
+	centerStackGreen.write(0)
 	
 def red():
-	cleanCenterStack()
-	GPIO.output(centerStackRed, GPIO.HIGH)
-	
+	centerStackRed.write(1)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(0)
+	centerStackGreen.write(0)
+
 def yellow():
-	cleanCenterStack()
-	GPIO.output(centerStackYellow, GPIO.HIGH)
+	centerStackRed.write(0)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(1)
+	centerStackGreen.write(0)
 	
 def green():
-	cleanCenterStack()
-	GPIO.output(centerStackGreen, GPIO.HIGH)
+	centerStackRed.write(0)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(0)
+	centerStackGreen.write(1)
 	
 def buzzerDef():
-	cleanCenterStack()
-	GPIO.output(centerStackBuzzer, GPIO.HIGH)
+	centerStackRed.write(0)
+	centerStackBuzzer.write(1)
+	centerStackYellow.write(0)
+	centerStackGreen.write(0)
     
 def redOsc():
-	cleanCenterStack()
-	GPIO.output(centerStackRed, GPIO.HIGH)
-	
+	return 0
+
 def yellowOsc():
-	cleanCenterStack()
-	GPIO.output(centerStackYellow, GPIO.HIGH)
-	
+	return 0
+
 def greenOsc():
-	cleanCenterStack()
-	GPIO.output(centerStackGreen, GPIO.HIGH)
-	
+	return 0
+
 def preGame():
-	yellowOsc()
-	
+	centerStackRed.write(1)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(1)
+	centerStackGreen.write(0)
+
 def lowTide():
-	yellowOsc()
-	
+	centerStackRed.write(0)
+	centerStackBuzzer.write(0)
+	centerStackYellow.write(1)
+	centerStackGreen.write(1)
+
 def gameOver():
-	red()
-	
-def gameProg():
-    green()
-    
+	centerStackRed.write(1)
+	centerStackBuzzer.write(1)
+	centerStackYellow.write(0)
+	centerStackGreen.write(0)
+
 updateCenterStack = {0 : special,
 					1 : red,
 					2 : yellow,
@@ -172,12 +195,40 @@ updateCenterStack = {0 : special,
 					8 : preGame,
 					9 : lowTide,
 					10: gameOver,
-                    11: gameProg,
 }
 
+def rGAMEINIT():
+	updateCenterStack[1]()
+	gameruntime[1]() # Go to next state.
 
-def updateScore():
-    # This outputs the scoreTextCentered from the global score vars and blits it.
+def rPREGAME():
+	updateCenterStack[8]()
+	gameruntime[2]() # Go to next state.
+
+def rGAMERUN():
+	updateCenterStack[3]()
+	gameruntime[3]() # Go to next state.
+
+def rTIMELOW():
+	updateCenterStack[9]()
+	gameruntime[4]() # Go to next state.
+
+def rPOSTGAME():
+	updateCenterStack[10]()
+	gameruntime[5]() # Go to next state.
+
+def rCLEANUP():
+	updateCenterStack[0]()
+
+gameruntime = { 0 : rGAMEINIT,
+				1 : rPREGAME,
+				2 : rGAMERUN,
+				3 : rTIMELOW,
+				4 : rPOSTGAME,
+				5 : rCLEANUP,
+} # The game should always run in this exact order.
+
+def updateScore(): # This outputs the scoreTextCentered from the global score vars and blits it.
     lesScoreText = dFont.render(str(leasathScore), 1, (0,0,0))
     lesTloc = (gridCentX + (gridX * 0) - (lesScoreText.get_width() / 2), gridCentY  + (gridY * 2) - (lesScoreText.get_height() / 2))
     aurScoreText = dFont.render(str(aureliaScore), 1, (0,0,0))
@@ -187,7 +238,16 @@ def updateScore():
     screen.blit(lesScoreText, lesTloc)
     screen.blit(aurScoreText, aurTloc)
 
-# GPIO.add_event_detect(23, GPIO.RISING, callback = getMatchStartButton, bouncetime = 300)
+def updateCamera(): # Blits the current camera view to the screen.
+	screen.fill(WHITE)
+	imagen = webcam.get_image()
+	imagen = pygame.transform.scale(imagen,(importantThings.current_w,importantThings.current_h))
+	screen.blit(imagen,(0,0))
+
+def updateMatchTime(): # Pushes an update to the I2C 7 segment display on the field.
+	display.clear()
+	display.print_float(matchTime, decimal_digits=0, justify_right=True)
+	display.write_display()
 
 while init:
     #This is the setup call for the game. Called once.
@@ -198,43 +258,27 @@ while init:
      init = False
 
 while True:
-    # This is the periodic call for the game. Called many times.
+    # This is the periodic call for the game. Called many, many times.
     for event in pygame.event.get():
         if event.type == QUIT:
-			cleanCenterStack()
 			webcam.stop()
 			pygame.quit()
 			GPIO.cleanup()
 			sys.exit()
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
-				# cleanCenterStack()
-				print('I set the GPIO pins back to low.')
 				print('Im ready to exit now.')
 				webcam.stop()
 				pygame.quit()
 				GPIO.cleanup()
 				sys.exit()
-                
-	screen.fill(WHITE)
-	imagen = webcam.get_image()
-	imagen = pygame.transform.scale(imagen,(importantThings.current_w,importantThings.current_h))
-	screen.blit(imagen,(0,0))
 
-	# updateCenterStack[1]()
-
-	centerStackRed.write(1)
-	centerStackBuzzer.write(0)
-	centerStackYellow.write(0)
-	centerStackGreen.write(0)
-
-	display.clear()
-	display.print_float(leasathScore, decimal_digits=0, justify_right=True)
-	display.write_display()
+	updateCamera()
 
 	updateScore()
-	leasathScore += 1
-	aureliaScore += 2
+
+	updateMatchTime()
 
 	pygame.display.flip()
+
 	time.sleep(sleepInterval)
