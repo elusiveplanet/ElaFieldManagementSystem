@@ -27,6 +27,16 @@ from Adafruit_LED_Backpack import SevenSegment
     # All others are defined already.
     # location = (gridCentX + (gridX * xLoc) - (lesScoreText.get_width() / 2), gridCentY + (gridY * yLoc) - (lesScoreText.get_height() / 2))
 
+#     ▄▄▄       ██▓    ▓█████ ▒██   ██▒ ██▓  ██████     ██▀███  ▓█████  ███▄    █ ▓█████▄ ▓█████  ██▀███   ▒█████    ██████ 
+#  ▒████▄    ▓██▒    ▓█   ▀ ▒▒ █ █ ▒░▓██▒▒██    ▒    ▓██ ▒ ██▒▓█   ▀  ██ ▀█   █ ▒██▀ ██▌▓█   ▀ ▓██ ▒ ██▒▒██▒  ██▒▒██    ▒ 
+#  ▒██  ▀█▄  ▒██░    ▒███   ░░  █   ░▒██▒░ ▓██▄      ▓██ ░▄█ ▒▒███   ▓██  ▀█ ██▒░██   █▌▒███   ▓██ ░▄█ ▒▒██░  ██▒░ ▓██▄   
+#  ░██▄▄▄▄██ ▒██░    ▒▓█  ▄  ░ █ █ ▒ ░██░  ▒   ██▒   ▒██▀▀█▄  ▒▓█  ▄ ▓██▒  ▐▌██▒░▓█▄   ▌▒▓█  ▄ ▒██▀▀█▄  ▒██   ██░  ▒   ██▒
+#   ▓█   ▓██▒░██████▒░▒████▒▒██▒ ▒██▒░██░▒██████▒▒   ░██▓ ▒██▒░▒████▒▒██░   ▓██░░▒████▓ ░▒████▒░██▓ ▒██▒░ ████▓▒░▒██████▒▒
+#   ▒▒   ▓▒█░░ ▒░▓  ░░░ ▒░ ░▒▒ ░ ░▓ ░░▓  ▒ ▒▓▒ ▒ ░   ░ ▒▓ ░▒▓░░░ ▒░ ░░ ▒░   ▒ ▒  ▒▒▓  ▒ ░░ ▒░ ░░ ▒▓ ░▒▓░░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░
+#    ▒   ▒▒ ░░ ░ ▒  ░ ░ ░  ░░░   ░▒ ░ ▒ ░░ ░▒  ░ ░     ░▒ ░ ▒░ ░ ░  ░░ ░░   ░ ▒░ ░ ▒  ▒  ░ ░  ░  ░▒ ░ ▒░  ░ ▒ ▒░ ░ ░▒  ░ ░
+#    ░   ▒     ░ ░      ░    ░    ░   ▒ ░░  ░  ░       ░░   ░    ░      ░   ░ ░  ░ ░  ░    ░     ░░   ░ ░ ░ ░ ▒  ░  ░  ░  
+#        ░  ░    ░  ░   ░  ░ ░    ░   ░        ░        ░        ░  ░         ░    ░       ░  ░   ░         ░ ░        ░  
+
 
 # List of nessecary pins
 # 
@@ -35,7 +45,6 @@ from Adafruit_LED_Backpack import SevenSegment
 # buttonsAlooksis 5x in
 # lightControllers
 #   -field lights 1x out
-#   -el strips 2x out
 #   -button lights ~x out
 
 GPIO.cleanup()
@@ -60,7 +69,7 @@ centerStackGreen = board.get_pin('d:5:o')
 
 # End of variables you might want to change.
 
-########
+# # # # # # # #
 
 # Create display instance on default I2C address (0x70) and bus number.
 display = SevenSegment.SevenSegment()
