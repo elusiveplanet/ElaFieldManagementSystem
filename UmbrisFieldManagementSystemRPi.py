@@ -208,23 +208,18 @@ updateCenterStack = {0 : special,
 
 def rGAMEINIT():
 	updateCenterStack[1]()
-	gameruntime[1]() # Go to next state.
 
 def rPREGAME():
 	updateCenterStack[8]()
-	gameruntime[2]() # Go to next state.
 
 def rGAMERUN():
 	updateCenterStack[3]()
-	gameruntime[3]() # Go to next state.
 
 def rTIMELOW():
 	updateCenterStack[9]()
-	gameruntime[4]() # Go to next state.
 
 def rPOSTGAME():
 	updateCenterStack[10]()
-	gameruntime[5]() # Go to next state.
 
 def rCLEANUP():
 	updateCenterStack[0]()
@@ -255,34 +250,35 @@ def updateCamera(): # Blits the current camera view to the screen.
 
 def updateMatchTime(): # Pushes an update to the I2C 7 segment display on the field.
 	display.clear()
+	# matchTime needs to update here.
 	display.print_float(matchTime, decimal_digits=0, justify_right=True)
 	display.write_display()
 
 while init:
     #This is the setup call for the game. Called once.
-     cam_list = pygame.camera.list_cameras()
-     print "Using camera %s ..." % cam_list[0]
-     webcam = pygame.camera.Camera(cam_list[0], (640, 480))
-     webcam.start()
-     init = False
+ 	# cam_list = pygame.camera.list_cameras()
+	# print "Using camera %s ..." % cam_list[0]
+	# webcam = pygame.camera.Camera(cam_list[0], (640, 480))
+	# webcam.start()
+	# init = False
 
 while True:
     # This is the periodic call for the game. Called many, many times.
     for event in pygame.event.get():
         if event.type == QUIT:
-			webcam.stop()
+			# webcam.stop()
 			pygame.quit()
 			GPIO.cleanup()
 			sys.exit()
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
 				print('Im ready to exit now.')
-				webcam.stop()
+				# webcam.stop()
 				pygame.quit()
 				GPIO.cleanup()
 				sys.exit()
 
-	updateCamera()
+	# updateCamera()
 
 	updateScore()
 
