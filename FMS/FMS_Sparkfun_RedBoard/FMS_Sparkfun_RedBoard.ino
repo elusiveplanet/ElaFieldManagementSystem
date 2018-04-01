@@ -4,10 +4,10 @@
 
 Adafruit_7segment matrix = Adafruit_7segment();
 
-int greenPin = 46;
-int yellowPin = 48;
-int buzzerPin = 50;
-int redPin = 52;
+int greenPin = 7;
+int yellowPin = 6;
+int buzzerPin = 5;
+int redPin = 4;
 int timeLeft = 120;
 boolean drawDots = false;
 
